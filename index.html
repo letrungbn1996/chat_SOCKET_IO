@@ -6,8 +6,9 @@
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
       form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
-      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      form#form-username { position: relative; top: 0; }
+      form#send-message input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form#send-message button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
       #messages { list-style-type: none; margin: 0; padding: 0; }
       #messages li { padding: 5px 10px; }
       #messages li:nth-child(odd) { background: #eee; }
@@ -15,24 +16,41 @@
     </style>
   </head>
   <body>
+    <form action="" id="form-username">
+      <input id="username"/><button id="send-username">Send</button>
+    </form>
+    <p id="name"></p>
     <ul id="messages"></ul>
-    <form action="">
+    <form action="" id="send-message">
       <input id="m" autocomplete="off" /><button>Send</button>
     </form>
+    <div id="feedback"></div>
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
       $(function () {
         var socket = io();
-        $('form').submit(function(){
-          socket.emit('chat message', $('#m').val());
+        $('#send-message').submit(function(){
+          socket.emit('new_message', { message: $('#m').val()});
           $('#m').val('');
           return false;
         });
-        socket.on('chat message', function(msg){
-          $('#messages').append($('<li>').text(msg));
+        $('#send-username').click(function(){
+            $('#form-username').css('display', 'none');
+            $('#name').text('Name : ' + $('#username').val());
+          socket.emit('change_username', { username: $('#username').val()});
+          return false;
+        })
+        socket.on('new_message', function(msg){
+          $('#messages').append('<li>'+ msg.username + ':' + msg.message + '</li>');
           window.scrollTo(0, document.body.scrollHeight);
         });
+        $('#m').bind("keypress", () => {
+          socket.emit('typing');
+        });
+        // socket.on('typing', data => {
+        //   $('#feedback').text(data.username + ' is typing a message...')
+        // })
       });
     </script>
   </body>

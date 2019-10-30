@@ -8,9 +8,17 @@ app.get('/', function(req, res){
 });
 
 io.on('connection', function(socket){
-  socket.on('chat message', function(msg){
-    io.emit('chat message', msg);
+  socket.username = "Anonymous";
+  socket.on('change_username', function(data){
+    socket.username = data.username;
+  })
+  socket.on('new_message', function(data){
+    io.emit('new_message', { message: data.message, username: socket.username });
   });
+
+  socket.on('typing', data => {
+    socket.broadcast.emit('typing', { username: socket.username });
+  })
 });
 
 http.listen(port, function(){
